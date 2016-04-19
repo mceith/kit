@@ -1,0 +1,11 @@
+parameters:
+  key_name: admin
+  availability_zone: helsinki-1
+  dmz_network: Network-DMZ-Helsinki-1
+  external_network: Public-Helsinki-1
+  image_id: CentOS 7 x86_64 09/2015
+  instance_flavor: nbl-free-tier
+  security_group_dmz: DMZ
+
+  
+   

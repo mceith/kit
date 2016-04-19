@@ -1,0 +1,74 @@
+heat_template_version: 2013-05-23
+
+description: >
+  Knowit network demo template. 
+  
+parameters:
+
+  external_network:
+    type: string
+    label: External network 
+  dmz_name:
+    type: string
+    label: Name of the DMZ network
+  dmz_subnet_name:
+    type: string
+    label: Name of the subnet in DMZ network
+  dmz_subnet_cidr:
+    type: string
+    label: CIDR of the DMZ subnet
+  dmz_subnet_gw:
+    type: string
+    label: Ip-address of the gw interface on DMZ subnet
+  dmz_allocation_start:
+    type: string
+    label: First address of the DHCP allocation pool
+  dmz_allocation_end:
+    type: string
+    label: Last address of the DHCP allocation pool
+  edge_router_name:
+    type: string
+    label: Name of the edge router
+  
+   
+resources:
+
+  dmz_hki1:
+    type: OS::Neutron::Net
+    properties:
+      admin_state_up: true
+      name: { get_param: dmz_name}
+  dmz_hki1_subnet:
+    type: OS::Neutron::Subnet
+    properties:
+      name: { get_param: dmz_subnet_name }
+      cidr: { get_param: dmz_subnet_cidr }
+      dns_nameservers: [217.30.180.230, 217.30.182.230]
+      enable_dhcp: true
+      gateway_ip: { get_param: dmz_subnet_gw }
+      allocation_pools: [{"start": { get_param: dmz_allocation_start }, "end": { get_param: dmz_allocation_end }}]
+      network_id: { get_resource: dmz_hki1 }
+
+  edge_router_hki1:
+    type: OS::Neutron::Router
+    properties:
+      admin_state_up: true
+      name: { get_param: edge_router_name }
+      external_gateway_info: {"network": { get_param: external_network } }
+  edge_router_hki1_int1:
+    type: OS::Neutron::RouterInterface
+    properties:
+      router_id: { get_resource: edge_router_hki1 }
+      subnet_id: { get_resource: dmz_hki1_subnet }
+
+  dmzin_0:
+    type: OS::Neutron::SecurityGroup
+    properties:
+      description : DMZ traffic  
+      name: DMZ
+      rules: [
+             {"direction": ingress, "remote_ip_prefix": 0.0.0.0/0, "port_range_min": 22, "ethertype": IPv4, "port_range_max":  22, "protocol":  tcp},
+             {"direction": ingress, "remote_ip_prefix": 0.0.0.0/0, "port_range_min": 80, "ethertype": IPv4, "port_range_max":  80, "protocol":  tcp},
+             {"direction": ingress, "remote_ip_prefix": 0.0.0.0/0, "port_range_min": 443, "ethertype": IPv4, "port_range_max":  443, "protocol":  tcp}
+             ]
+
